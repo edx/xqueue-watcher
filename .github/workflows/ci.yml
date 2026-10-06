@@ -32,3 +32,12 @@ jobs:
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         fail_ci_if_error: true
+
+  # Aggregate check required by the master branch ruleset.
+  tests:
+    needs: run_tests
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+    - name: Fail unless all run_tests jobs succeeded
+      run: test "${{ needs.run_tests.result }}" = "success"

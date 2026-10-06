@@ -1,0 +1,35 @@
+name: version-check
+
+# Required status check for the master branch ruleset. This repo has no
+# package-lock.json (it's a pure Python project), so this is a local
+# equivalent of openedx/.github's lockfileversion-check-v3.yml that passes
+# when the file is simply absent, rather than failing as the shared
+# reusable workflow does.
+
+on:
+  push:
+    branches:
+    - master
+  pull_request:
+    branches:
+    - '**'
+
+jobs:
+  version-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check lockfile version
+        run: |
+          if [ ! -f package-lock.json ]; then
+            echo "No package-lock.json present; nothing to check."
+            exit 0
+          fi
+          if grep -q '"lockfileVersion": 3,' package-lock.json; then
+            echo "package-lock.json uses lockfileVersion 3."
+            exit 0
+          fi
+          echo "ERROR: Outdated package-lock file. Use NPM9 to install dependencies"
+          exit 1
