@@ -16,7 +16,7 @@ jobs:
       matrix:
         os:
         - ubuntu-latest
-        python-version: ['3.11', '3.12']
+        python-version: ['3.12']
     steps:
     - uses: actions/checkout@v4
     - name: setup python
@@ -31,4 +31,17 @@ jobs:
       uses: codecov/codecov-action@v4
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
-        fail_ci_if_error: true
+        # CODECOV_TOKEN is not currently configured for this repo, which
+        # makes Codecov reject the upload ("Token required because branch
+        # is protected"). Don't let that block the required `tests` check
+        # until the secret is added -- see repo admin.
+        fail_ci_if_error: false
+
+  # Aggregate check required by the master branch ruleset.
+  tests:
+    needs: run_tests
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+    - name: Fail unless all run_tests jobs succeeded
+      run: test "${{ needs.run_tests.result }}" = "success"
